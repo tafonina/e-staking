@@ -54,11 +54,13 @@ contract StakeManager is Initializable, AccessControlUpgradeable, IStakeManager,
     error NoSlashedBalanceToWithdraw();
     error NoBalanceToWithdraw();
     error ZeroAmount();
+    error RolesAmountExceeded();
 
     // constant staker roles
     bytes32 public constant STAKER_ROLE1 = keccak256("STAKER_ROLE1");
     bytes32 public constant STAKER_ROLE2 = keccak256("STAKER_ROLE2");
     bytes32 public constant STAKER_ROLE3 = keccak256("STAKER_ROLE3");
+    uint256 public constant MAX_STAKER_ROLES = 3;
 
     uint256 private _registrationDepositAmount; // initial registration deposit amount in wei
     uint256 private _withdrawalWaitTime; // speed bump, the duration a staker must wait after unstake before withdrawal
@@ -280,6 +282,9 @@ contract StakeManager is Initializable, AccessControlUpgradeable, IStakeManager,
      * @param rolesIds The array of staker roles ids to be registered.
      */
     function _register(address staker, bytes32[] memory rolesIds) internal {
+        if (rolesIds.length > MAX_STAKER_ROLES) {
+            revert RolesAmountExceeded();
+        }
         // add staker's roles
         for (uint256 i = 0; i < rolesIds.length;) {
             _setStakerRole(staker, rolesIds[i]);
