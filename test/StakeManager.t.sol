@@ -61,7 +61,7 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_SetConfigurationRevertIf_NotAdmin() public {
         vm.prank(_staker1);
-        vm.expectRevert(AdminRoleNotGranted.selector);
+        vm.expectRevert(StakeManager.AdminRoleNotGranted.selector);
         stakeManager.setConfiguration(DEFAULT_REGISTRATION_DEPOSIT_AMOUNT + 1, DEFAULT_WITHDRAWAL_WAIT_TIME + 1);
     }
 
@@ -86,20 +86,20 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_RegisterRevertIf_NotEnoughAmount() public {
         vm.prank(_staker1);
-        vm.expectRevert(NotEnoughDepositAmount.selector);
+        vm.expectRevert(StakeManager.NotEnoughDepositAmount.selector);
         stakeManager.register{value: DEFAULT_REGISTRATION_DEPOSIT_AMOUNT - 1}(_stakerRolesIds);
     }
 
     function test_RegisterRevertIf_RoleDoesntExist() public {
         vm.prank(_staker1);
-        vm.expectRevert(RoleDoesntExist.selector);
+        vm.expectRevert(StakeManager.RoleDoesntExist.selector);
         stakeManager.register{value: DEFAULT_REGISTRATION_DEPOSIT_AMOUNT}(_badStakerRolesIds);
     }
 
     function test_RegisterRevertIf_AlreadyRegisteredRole() public {
         test_Register();
         vm.prank(_staker1);
-        vm.expectRevert(AlreadyRegisteredRole.selector);
+        vm.expectRevert(StakeManager.AlreadyRegisteredRole.selector);
         stakeManager.register{value: DEFAULT_REGISTRATION_DEPOSIT_AMOUNT}(_stakerRolesIds);
     }
 
@@ -148,14 +148,14 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_StakeRevertIf_NotNotRegisteredStaker() public {
         vm.prank(_staker1);
-        vm.expectRevert(NotRegisteredStaker.selector);
+        vm.expectRevert(StakeManager.NotRegisteredStaker.selector);
         stakeManager.stake{value: DEFAULT_STAKE_DEPOSIT_AMOUNT}();
     }
 
     function test_StakeRevertIf_NoBalanceToStake() public {
         test_Register();
         vm.prank(_staker1);
-        vm.expectRevert(NoBalanceToStake.selector);
+        vm.expectRevert(StakeManager.NoBalanceToStake.selector);
         stakeManager.stake();
     }
 
@@ -187,14 +187,14 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_UnstakeRevertIf_NotRegisteredStaker() public {
         vm.prank(_staker1);
-        vm.expectRevert(NotRegisteredStaker.selector);
+        vm.expectRevert(StakeManager.NotRegisteredStaker.selector);
         stakeManager.unstake();
     }
 
     function test_UnstakeRevertIf_NotEnoughStakedBalance() public {
         test_Withdraw();
         vm.prank(_staker1);
-        vm.expectRevert(NoBalanceToUnstake.selector);
+        vm.expectRevert(StakeManager.NoBalanceToUnstake.selector);
         stakeManager.unstake();
     }
 
@@ -217,14 +217,14 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
         test_Unstake_AfterStake();
         skip(DEFAULT_WITHDRAWAL_WAIT_TIME);
         vm.prank(_staker2);
-        vm.expectRevert(NotRegisteredStaker.selector);
+        vm.expectRevert(StakeManager.NotRegisteredStaker.selector);
         stakeManager.withdraw();
     }
 
     function test_WithdrawRevertIf_WithdrawalWaitTimeNotPassed() public {
         test_Unstake_AfterStake();
         vm.prank(_staker1);
-        vm.expectRevert(WithdrawalWaitTimeNotPassed.selector);
+        vm.expectRevert(StakeManager.WithdrawalWaitTimeNotPassed.selector);
         stakeManager.withdraw();
     }
 
@@ -232,7 +232,7 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
     function test_WithdrawRevertIf_NoBalanceToWithdraw() public {
         test_Withdraw();
         vm.prank(_staker1);
-        vm.expectRevert(NoBalanceToWithdraw.selector);
+        vm.expectRevert(StakeManager.NoBalanceToWithdraw.selector);
         stakeManager.withdraw();
     }
 
@@ -253,21 +253,21 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_UnregisterRevertIf_NotRegisteredStaker() public {
         vm.prank(_staker1);
-        vm.expectRevert(NotRegisteredStaker.selector);
+        vm.expectRevert(StakeManager.NotRegisteredStaker.selector);
         stakeManager.unregister();
     }
 
     function test_UnregisterRevertIf_StakerBalanceIsNonZero() public {
         test_Stake();
         vm.prank(_staker1);
-        vm.expectRevert(BalanceIsNonZero.selector);
+        vm.expectRevert(StakeManager.BalanceIsNonZero.selector);
         stakeManager.unregister();
     }
 
     function test_UnregisterRevertIf_PendingWithdrawalBalanceIsNonZero() public {
         test_Unstake_AfterStake();
         vm.prank(_staker1);
-        vm.expectRevert(PendingWithdrawalBalanceIsNonZero.selector);
+        vm.expectRevert(StakeManager.PendingWithdrawalBalanceIsNonZero.selector);
         stakeManager.unregister();
     }
 
@@ -284,19 +284,19 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_SlashRevertWhen_AmountIsZero() public {
         test_Register();
-        vm.expectRevert(ZeroAmount.selector);
+        vm.expectRevert(StakeManager.ZeroAmount.selector);
         stakeManager.slash(_staker1, 0);
     }
 
     function test_SlashRevertWhen_NotRegisteredStaker() public {
         test_Register();
-        vm.expectRevert(NotRegisteredStaker.selector);
+        vm.expectRevert(StakeManager.NotRegisteredStaker.selector);
         stakeManager.slash(_staker2, DEFAULT_REGISTRATION_DEPOSIT_AMOUNT / 2);
     }
 
     function test_SlashRevertWhen_NotEnoughStakedBalance() public {
         test_Register();
-        vm.expectRevert(NoBalanceToSlash.selector);
+        vm.expectRevert(StakeManager.NoBalanceToSlash.selector);
         stakeManager.slash(_staker1, DEFAULT_REGISTRATION_DEPOSIT_AMOUNT + 1);
     }
 
@@ -312,13 +312,13 @@ contract StakeManagerTest is Test, IStakeManagerEvents {
 
     function test_WithdrawEtherByAdminRevertIf_NoSlashedBalanceToWithdraw() public {
         test_Register();
-        vm.expectRevert(NoSlashedBalanceToWithdraw.selector);
+        vm.expectRevert(StakeManager.NoSlashedBalanceToWithdraw.selector);
         stakeManager.withdrawEtherByAdmin(_staker1);
     }
 
     function test_WithdrawEtherByAdminRevertIf_RecipientIsZeroAddress() public {
         test_Slash();
-        vm.expectRevert(ZeroAddress.selector);
+        vm.expectRevert(StakeManager.ZeroAddress.selector);
         stakeManager.withdrawEtherByAdmin(address(0x0));
     }
 

@@ -5,24 +5,6 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IStakeManager} from "./interfaces/IStakeManager.sol";
 import {IStakeManagerEvents} from "./interfaces/IStakeManagerEvents.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
-error AdminRoleNotGranted();
-error NotRegisteredStaker();
-error NotEnoughDepositAmount();
-error NoBalanceToUnstake();
-error NoBalanceToSlash();
-error ZeroAddress();
-error RoleDoesntExist();
-error NoBalanceToStake();
-error BalanceIsNonZero();
-error PendingWithdrawalBalanceIsNonZero();
-error FailedTransfer();
-error AlreadyRegisteredRole();
-error WithdrawalWaitTimeNotPassed();
-error NoSlashedBalanceToWithdraw();
-error NoBalanceToWithdraw();
-error ZeroAmount();
 
 // @assume only basic events are required Registered, Unregistered, Staked, Unstaked, Withdrawn, Slashed,
 //      all other are not required within the task
@@ -50,13 +32,28 @@ error ZeroAmount();
 //      the account will be able to register for one more role without _registrationDepositAmount
 
 contract StakeManager is Initializable, AccessControlUpgradeable, IStakeManager, IStakeManagerEvents {
-    using EnumerableSet for EnumerableSet.Bytes32Set;
-
     struct Staker {
         uint256 balance; // staker's balance (does not include pending withdrawal balance)
         uint256 balancePendingWithdrawal; // pending balance to be withdrawn when withdrawalTimestamp is passed
         uint256 withdrawalTimestamp; // timestamp shows when user is able to withdraw the pending balance
     }
+
+    error AdminRoleNotGranted();
+    error NotRegisteredStaker();
+    error NotEnoughDepositAmount();
+    error NoBalanceToUnstake();
+    error NoBalanceToSlash();
+    error ZeroAddress();
+    error RoleDoesntExist();
+    error NoBalanceToStake();
+    error BalanceIsNonZero();
+    error PendingWithdrawalBalanceIsNonZero();
+    error FailedTransfer();
+    error AlreadyRegisteredRole();
+    error WithdrawalWaitTimeNotPassed();
+    error NoSlashedBalanceToWithdraw();
+    error NoBalanceToWithdraw();
+    error ZeroAmount();
 
     // constant staker roles
     bytes32 public constant STAKER_ROLE1 = keccak256("STAKER_ROLE1");
