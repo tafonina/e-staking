@@ -49,12 +49,7 @@ error ZeroAmount();
 // @assume if ADMIN will grant some staker role to the account,
 //      the account will be able to register for one more role without _registrationDepositAmount
 
-contract StakeManager is
-    Initializable,
-    AccessControlUpgradeable,
-    IStakeManager,
-    IStakeManagerEvents
-{
+contract StakeManager is Initializable, AccessControlUpgradeable, IStakeManager, IStakeManagerEvents {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     struct Staker {
@@ -119,10 +114,7 @@ contract StakeManager is
      * @param registrationDepositAmount Initial registration deposit amount in wei.
      * @param withdrawalWaitTime The duration a staker must wait after initiating registration.
      */
-    function initialize(
-        uint256 registrationDepositAmount,
-        uint256 withdrawalWaitTime
-    ) public initializer {
+    function initialize(uint256 registrationDepositAmount, uint256 withdrawalWaitTime) public initializer {
         __AccessControl_init();
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setConfiguration(registrationDepositAmount, withdrawalWaitTime);
@@ -133,10 +125,11 @@ contract StakeManager is
      * @param registrationDepositAmount Initial registration deposit amount in wei.
      * @param withdrawalWaitTime The duration a staker must wait after initiating registration.
      */
-    function setConfiguration(
-        uint256 registrationDepositAmount,
-        uint256 withdrawalWaitTime
-    ) external override onlyAdmin {
+    function setConfiguration(uint256 registrationDepositAmount, uint256 withdrawalWaitTime)
+        external
+        override
+        onlyAdmin
+    {
         _setConfiguration(registrationDepositAmount, withdrawalWaitTime);
     }
 
@@ -147,10 +140,7 @@ contract StakeManager is
      */
     function register(bytes32[] memory rolesIds) external payable override {
         // check if staker is not registered - if so, check if deposit amount is enough
-        if (
-            !isStakerRegistered(msg.sender) &&
-            msg.value < _registrationDepositAmount
-        ) {
+        if (!isStakerRegistered(msg.sender) && msg.value < _registrationDepositAmount) {
             revert NotEnoughDepositAmount();
         }
         _register(msg.sender, rolesIds);
@@ -192,12 +182,7 @@ contract StakeManager is
     /**
      * @dev Allows registered stakers to withdraw the unstaked ether from the contract
      */
-    function withdraw()
-        external
-        override
-        onlyRegisteredStaker
-        passedWithdrawalTimestamp
-    {
+    function withdraw() external override onlyRegisteredStaker passedWithdrawalTimestamp {
         _withdrawAll(msg.sender);
     }
 
@@ -227,17 +212,13 @@ contract StakeManager is
      * @dev Allows admin to withdraw the whole slashed balance from the contract
      * @param recipient The address of the recipient to be withdrawn.
      */
-    function withdrawEtherByAdmin(
-        address recipient
-    ) external onlyAdmin nonZeroAddress(recipient) {
+    function withdrawEtherByAdmin(address recipient) external onlyAdmin nonZeroAddress(recipient) {
         if (_slashedTotalAmount == 0) {
             revert NoSlashedBalanceToWithdraw();
         }
         uint256 amount = _slashedTotalAmount;
         _slashedTotalAmount = 0;
-        (bool success, ) = payable(recipient).call{gas: 200_000, value: amount}(
-            ""
-        );
+        (bool success,) = payable(recipient).call{gas: 200_000, value: amount}("");
         if (!success) {
             revert FailedTransfer();
         }
@@ -257,9 +238,7 @@ contract StakeManager is
      * @param staker The address of the staker to be checked.
      * @return The pending withdrawal balance of the staker.
      */
-    function getPendingWithdrawalBalance(
-        address staker
-    ) external view returns (uint256) {
+    function getPendingWithdrawalBalance(address staker) external view returns (uint256) {
         return _stakers[staker].balancePendingWithdrawal;
     }
 
@@ -293,10 +272,7 @@ contract StakeManager is
      * @param registrationDepositAmount Initial registration deposit amount in wei.
      * @param withdrawalWaitTime The duration a staker must wait after initiating registration.
      */
-    function _setConfiguration(
-        uint256 registrationDepositAmount,
-        uint256 withdrawalWaitTime
-    ) internal {
+    function _setConfiguration(uint256 registrationDepositAmount, uint256 withdrawalWaitTime) internal {
         _registrationDepositAmount = registrationDepositAmount;
         _withdrawalWaitTime = withdrawalWaitTime;
     }
@@ -308,7 +284,7 @@ contract StakeManager is
      */
     function _register(address staker, bytes32[] memory rolesIds) internal {
         // add staker's roles
-        for (uint256 i = 0; i < rolesIds.length; ) {
+        for (uint256 i = 0; i < rolesIds.length;) {
             _setStakerRole(staker, rolesIds[i]);
             unchecked {
                 i += 1;
@@ -357,9 +333,7 @@ contract StakeManager is
         // increment to pending withdrawal balance even if it is non zero
         _stakers[staker].balancePendingWithdrawal += balance;
         // update withdrawalTimestamp even if previous not passes (according to assumptions)
-        _stakers[staker].withdrawalTimestamp =
-            block.timestamp +
-            _withdrawalWaitTime;
+        _stakers[staker].withdrawalTimestamp = block.timestamp + _withdrawalWaitTime;
         emit Unstaked(staker, balance, _stakers[staker].withdrawalTimestamp);
     }
 
@@ -368,8 +342,7 @@ contract StakeManager is
      * @param staker The address of the staker to be withdrawn.
      */
     function _withdrawAll(address staker) internal {
-        uint256 balancePendingWithdrawal = _stakers[msg.sender]
-            .balancePendingWithdrawal;
+        uint256 balancePendingWithdrawal = _stakers[msg.sender].balancePendingWithdrawal;
 
         if (balancePendingWithdrawal == 0) {
             revert NoBalanceToWithdraw();
@@ -377,9 +350,7 @@ contract StakeManager is
         _stakers[staker].balancePendingWithdrawal = 0;
         emit Withdrawn(staker, balancePendingWithdrawal);
         // transfer ether to the staker
-        (bool success, ) = payable(staker).call{
-            value: balancePendingWithdrawal
-        }("");
+        (bool success,) = payable(staker).call{value: balancePendingWithdrawal}("");
         if (!success) {
             revert FailedTransfer();
         }
@@ -404,11 +375,7 @@ contract StakeManager is
      */
     function _setStakerRole(address staker, bytes32 roleId) internal {
         // procced only if role exists in system
-        if (
-            roleId != STAKER_ROLE1 &&
-            roleId != STAKER_ROLE2 &&
-            roleId != STAKER_ROLE3
-        ) {
+        if (roleId != STAKER_ROLE1 && roleId != STAKER_ROLE2 && roleId != STAKER_ROLE3) {
             revert RoleDoesntExist();
         }
         // proceed only if staker has not this role yet
@@ -423,6 +390,6 @@ contract StakeManager is
      * @param staker The address of the staker to be checked.
      */
     function _hasAnyStakerRole(address staker) internal view returns (bool) {
-        return hasRole(STAKER_ROLE1, staker) || hasRole(STAKER_ROLE2, staker);
+        return hasRole(STAKER_ROLE1, staker) || hasRole(STAKER_ROLE2, staker) || hasRole(STAKER_ROLE3, staker);
     }
 }
