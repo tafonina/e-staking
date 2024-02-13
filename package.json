@@ -1,0 +1,24 @@
+{
+  "name": "stake-manager",
+  "version": "1.0.0",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "coverage": "forge coverage",
+    "deploy": "export $(cat .env | xargs) && forge script script/StakeManager.s.sol:DeployProxy --rpc-url $RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast -vvvv --ffi",
+    "solhint": "solhint --config .solhint.json --ignore-path .solhintignore --max-warnings 0 \"src/*.sol\"",
+    "solhint:check": "solhint --config .solhint.json --max-warnings 0 -f table \"src/*.sol\" ",
+    "prettier:solidity:check": "prettier --check src/*",
+    "prettier:solidity:fix": "prettier --write \"src/*.sol\""
+  },
+  "dependencies": {
+    "prettier": "^2.8.8",
+    "prettier-plugin-solidity": "^1.1.3",
+    "solhint": "^3.4.1",
+    "solhint-plugin-prettier": "^0.0.5"
+  }
+}
